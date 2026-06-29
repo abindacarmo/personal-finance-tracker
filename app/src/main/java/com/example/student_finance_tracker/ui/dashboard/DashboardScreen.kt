@@ -1,6 +1,7 @@
 package com.example.student_finance_tracker.ui.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -19,10 +20,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.student_finance_tracker.data.Transaction
 import com.example.student_finance_tracker.ui.theme.*
+import com.example.student_finance_tracker.viewmodel.FinanceViewModel
 
 @Composable
-fun DashboardScreen(onNavigateToAddTransaction: () -> Unit = {}) {
+fun DashboardScreen(
+    onNavigateToAddTransaction: () -> Unit = {},
+    viewModel: FinanceViewModel? = null // Diubah menjadi nullable (? = null)
+) {
+    // Mengambil data secara aman jika viewModel ada, jika tidak gunakan list kosong
+    // Menambahkan tipe eksplisit <Transaction> untuk memperbaiki error inferensi tipe
+    val transactions by viewModel?.transactions?.collectAsState(initial = emptyList<Transaction>()) 
+        ?: remember { mutableStateOf(emptyList<Transaction>()) }
+
     Scaffold(
         bottomBar = { BottomNavigationBar() },
         floatingActionButton = {
@@ -143,6 +154,9 @@ fun SummaryCard(title: String, amount: String, color: Color, modifier: Modifier 
 
 @Composable
 fun ExpenseSummarySection() {
+    var selectedPeriod by remember { mutableStateOf("Weekly") }
+    val periods = listOf("Weekly", "Monthly", "Yearly")
+
     Column {
         Text(
             text = "Spending Summary",
@@ -155,9 +169,29 @@ fun ExpenseSummarySection() {
             modifier = Modifier.padding(vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text(text = "Weekly", color = PrimaryPink, fontWeight = FontWeight.Bold)
-            Text(text = "Monthly", color = TextGray)
-            Text(text = "Yearly", color = TextGray)
+            periods.forEach { period ->
+                val isSelected = selectedPeriod == period
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = period,
+                        color = if (isSelected) PrimaryPink else TextGray,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        modifier = Modifier
+                            .clickable { selectedPeriod = period }
+                            .padding(bottom = 4.dp)
+                    )
+                    if (isSelected) {
+                        Box(
+                            modifier = Modifier
+                                .width(20.dp)
+                                .height(2.dp)
+                                .background(PrimaryPink, RoundedCornerShape(2.dp))
+                        )
+                    } else {
+                        Box(modifier = Modifier.height(2.dp))
+                    }
+                }
+            }
         }
         
         Card(
@@ -170,8 +204,17 @@ fun ExpenseSummarySection() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = "Weekly Spending", fontSize = 12.sp, color = TextGray)
-                    Text(text = "$120.00", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = PrimaryPink)
+                    Text(text = "$selectedPeriod Spending", fontSize = 12.sp, color = TextGray)
+                    Text(
+                        text = when(selectedPeriod) {
+                            "Weekly" -> "$120.00"
+                            "Monthly" -> "$480.00"
+                            else -> "$5,200.00"
+                        }, 
+                        fontSize = 14.sp, 
+                        fontWeight = FontWeight.Bold, 
+                        color = PrimaryPink
+                    )
                 }
                 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -183,9 +226,21 @@ fun ExpenseSummarySection() {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    val bars = listOf(0.4f, 0.6f, 0.5f, 0.9f, 0.3f, 0.5f, 0.4f)
-                    val days = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su")
-                    val amounts = listOf("$12", "$18", "$15", "$28", "$10", "$15", "$12")
+                    val bars = when(selectedPeriod) {
+                        "Weekly" -> listOf(0.4f, 0.6f, 0.5f, 0.9f, 0.3f, 0.5f, 0.4f)
+                        "Monthly" -> listOf(0.7f, 0.4f, 0.8f, 0.5f, 0.6f, 0.3f, 0.9f)
+                        else -> listOf(0.5f, 0.7f, 0.6f, 0.8f, 0.9f, 0.4f, 0.5f)
+                    }
+                    val labels = when(selectedPeriod) {
+                        "Weekly" -> listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su")
+                        "Monthly" -> listOf("W1", "W2", "W3", "W4", "W5", "W6", "W7")
+                        else -> listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul")
+                    }
+                    val amounts = when(selectedPeriod) {
+                        "Weekly" -> listOf("$12", "$18", "$15", "$28", "$10", "$15", "$12")
+                        "Monthly" -> listOf("$80", "$50", "$90", "$65", "$75", "$40", "$80")
+                        else -> listOf("$400", "$600", "$550", "$700", "$820", "$380", "$500")
+                    }
                     
                     bars.forEachIndexed { index, barHeight ->
                         Column(
@@ -222,7 +277,7 @@ fun ExpenseSummarySection() {
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = days[index], 
+                                text = labels[index],
                                 fontSize = 10.sp, 
                                 color = if(index == 3) PrimaryPink else TextGray,
                                 fontWeight = if(index == 3) FontWeight.Bold else FontWeight.Normal
@@ -358,10 +413,12 @@ fun BottomNavigationBar() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun DashboardPreview() {
     StudentfinancetrackerTheme {
-        DashboardScreen()
+        DashboardScreen(
+            onNavigateToAddTransaction = {}
+        )
     }
 }
