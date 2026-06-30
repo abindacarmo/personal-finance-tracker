@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -292,6 +294,10 @@ fun ExpenseSummarySection() {
 
 @Composable
 fun AddTransactionSection() {
+    var description by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf("Food") }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.6f)),
@@ -307,19 +313,61 @@ fun AddTransactionSection() {
             Spacer(modifier = Modifier.height(12.dp))
             
             Text(text = "Description", fontSize = 12.sp, color = TextGray)
-            Text(text = "Afternoon coffee...", fontSize = 16.sp, color = TextDark.copy(alpha = 0.5f))
+            TextField(
+                value = description,
+                onValueChange = { description = it },
+                placeholder = { Text("Afternoon coffee...", fontSize = 16.sp, color = TextDark.copy(alpha = 0.3f)) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+                singleLine = true,
+                textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, color = TextDark)
+            )
             
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = TextGray.copy(alpha = 0.1f))
+            HorizontalDivider(modifier = Modifier.padding(bottom = 8.dp), color = TextGray.copy(alpha = 0.1f))
             
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = "Amount", fontSize = 12.sp, color = TextGray)
-                    Text(text = "0", fontSize = 16.sp, color = TextDark)
+                    TextField(
+                        value = amount,
+                        onValueChange = { amount = it },
+                        placeholder = { Text("0", fontSize = 16.sp, color = TextDark.copy(alpha = 0.3f)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                        ),
+                        singleLine = true,
+                        textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, color = TextDark)
+                    )
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = "Category", fontSize = 12.sp, color = TextGray)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = "Food", fontSize = 16.sp, color = TextDark)
+                        TextField(
+                            value = category,
+                            onValueChange = { category = it },
+                            modifier = Modifier.weight(1f),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                            ),
+                            singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, color = TextDark)
+                        )
                         Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
                 }
@@ -328,7 +376,7 @@ fun AddTransactionSection() {
             Spacer(modifier = Modifier.height(20.dp))
             
             Button(
-                onClick = { /* Save */ },
+                onClick = { /* Save action with description, amount, category */ },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryPink),
                 shape = RoundedCornerShape(12.dp)
