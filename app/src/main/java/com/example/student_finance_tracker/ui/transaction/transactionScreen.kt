@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
@@ -21,18 +22,35 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.student_finance_tracker.ui.theme.*
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransactionScreen(onBackClick: () -> Unit = {}) {
     var isExpense by remember { mutableStateOf(true) }
-    var amount by remember { mutableStateOf("0") }
+    var amount by remember { mutableStateOf("") }
+    var note by remember { mutableStateOf("") }
     
+    // State untuk Date Picker
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = System.currentTimeMillis())
+    
+    val formattedDate = remember(datePickerState.selectedDateMillis) {
+        val millis = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
+        Instant.ofEpochMilli(millis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+            .format(DateTimeFormatter.ofPattern("dd / MM / yyyy"))
+    }
+
     // State kategori terpilih yang otomatis reset saat pindah tipe (Expense/Income)
     var selectedCategory by remember(isExpense) { 
         mutableStateOf(if (isExpense) "Food" else "Salary") 
@@ -99,14 +117,29 @@ fun AddTransactionScreen(onBackClick: () -> Unit = {}) {
                     fontWeight = FontWeight.ExtraBold,
                     color = PrimaryPink.copy(alpha = 0.5f)
                 )
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = amount,
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = TextGray.copy(alpha = 0.3f)
+                Spacer(modifier = Modifier.width(8.dp))
+                TextField(
+                    value = amount,
+                    onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amount = it },
+                    placeholder = { Text("0", fontSize = 48.sp, fontWeight = FontWeight.ExtraBold, color = TextGray.copy(alpha = 0.2f)) },
+                    modifier = Modifier.width(intrinsicSize = IntrinsicSize.Min).widthIn(min = 100.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                    textStyle = LocalTextStyle.current.copy(
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextDark,
+                        textAlign = TextAlign.Start
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true
                 )
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     Icons.Default.UnfoldMore,
                     contentDescription = null,
@@ -165,12 +198,12 @@ fun AddTransactionScreen(onBackClick: () -> Unit = {}) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 12.dp)
-                    .clickable { /* Date Picker */ },
+                    .clickable { showDatePicker = true },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = PrimaryPink, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(text = "27 / 10 / 2023", fontSize = 16.sp, color = TextDark)
+                Text(text = formattedDate, fontSize = 16.sp, color = TextDark)
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(Icons.Default.CalendarToday, contentDescription = null, tint = TextGray, modifier = Modifier.size(18.dp))
             }
@@ -187,15 +220,27 @@ fun AddTransactionScreen(onBackClick: () -> Unit = {}) {
             )
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
+                    .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = null, tint = PrimaryPink, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(text = "Write details here...", fontSize = 16.sp, color = TextGray.copy(alpha = 0.4f))
+                TextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    placeholder = { Text("Write details here...", fontSize = 16.sp, color = TextGray.copy(alpha = 0.4f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, color = TextDark)
+                )
             }
-            HorizontalDivider(color = TextGray.copy(alpha = 0.1f))
+            HorizontalDivider(color = TextGray.copy(alpha = 0.1f), modifier = Modifier.padding(top = 0.dp))
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -218,6 +263,25 @@ fun AddTransactionScreen(onBackClick: () -> Unit = {}) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = "Save Transaction", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
+        }
+    }
+
+    // Date Picker Dialog
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
