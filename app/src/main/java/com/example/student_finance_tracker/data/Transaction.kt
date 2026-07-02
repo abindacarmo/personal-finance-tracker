@@ -12,5 +12,7 @@ data class Transaction(
     val amount: Double = 0.0,
     val category: String = "Food",
     val date: Long = System.currentTimeMillis(),
-    val isIncome: Boolean = false
+    val note: String = "",
+    val isIncome: Boolean = false,
+    val isExpense: Boolean = false
 )

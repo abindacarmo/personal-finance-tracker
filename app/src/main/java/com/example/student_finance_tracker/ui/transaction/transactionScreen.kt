@@ -6,12 +6,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -23,8 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.student_finance_tracker.ui.theme.*
@@ -34,12 +33,14 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTransactionScreen(onBackClick: () -> Unit = {}) {
+fun AddTransactionScreen(
+    onBackClick: () -> Unit = {},
+    viewmodel: TransactionViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
     var isExpense by remember { mutableStateOf(true) }
     var amount by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     
-    // State untuk Date Picker
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = System.currentTimeMillis())
     
@@ -51,7 +52,6 @@ fun AddTransactionScreen(onBackClick: () -> Unit = {}) {
             .format(DateTimeFormatter.ofPattern("dd / MM / yyyy"))
     }
 
-    // State kategori terpilih yang otomatis reset saat pindah tipe (Expense/Income)
     var selectedCategory by remember(isExpense) { 
         mutableStateOf(if (isExpense) "Food" else "Salary") 
     }
@@ -72,13 +72,41 @@ fun AddTransactionScreen(onBackClick: () -> Unit = {}) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = PrimaryPink)
                     }
                 },
-                actions = {
-                    IconButton(onClick = { /* Handle menu */ }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More", tint = PrimaryPink)
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight)
             )
+        },
+        bottomBar = {
+            // Pindahkan tombol simpan ke Bottom Bar agar selalu terlihat
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.Transparent,
+                tonalElevation = 8.dp
+            ) {
+                Button(
+                    onClick = {
+                        if (amount.isNotEmpty()) {
+                            viewmodel.saveTransaction(
+                                amount = amount,
+                                category = selectedCategory,
+                                date = datePickerState.selectedDateMillis ?: System.currentTimeMillis(),
+                                note = note,
+                                isExpense = isExpense,
+                                onSuccess = { onBackClick() }
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryPink),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Save, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "Save Transaction", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         },
         containerColor = BackgroundLight
     ) { innerPadding ->
@@ -86,12 +114,12 @@ fun AddTransactionScreen(onBackClick: () -> Unit = {}) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Toggle Switch (Expense / Income)
             TransactionTypeToggle(
                 isExpense = isExpense,
                 onToggle = { isExpense = it }
@@ -99,187 +127,83 @@ fun AddTransactionScreen(onBackClick: () -> Unit = {}) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Amount Section
-            Text(
-                text = "AMOUNT ($)",
-                fontSize = 12.sp,
-                color = TextGray,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = "AMOUNT ($)", fontSize = 12.sp, color = TextGray, fontWeight = FontWeight.Bold)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(vertical = 16.dp)
             ) {
-                Text(
-                    text = "$",
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = PrimaryPink.copy(alpha = 0.5f)
-                )
+                Text(text = "$", fontSize = 48.sp, fontWeight = FontWeight.ExtraBold, color = PrimaryPink.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.width(8.dp))
                 TextField(
                     value = amount,
                     onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amount = it },
                     placeholder = { Text("0", fontSize = 48.sp, fontWeight = FontWeight.ExtraBold, color = TextGray.copy(alpha = 0.2f)) },
-                    modifier = Modifier.width(intrinsicSize = IntrinsicSize.Min).widthIn(min = 100.dp),
+                    modifier = Modifier.widthIn(min = 100.dp),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                     ),
-                    textStyle = LocalTextStyle.current.copy(
-                        fontSize = 48.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = TextDark,
-                        textAlign = TextAlign.Start
-                    ),
+                    textStyle = LocalTextStyle.current.copy(fontSize = 48.sp, fontWeight = FontWeight.ExtraBold, color = TextDark),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true
                 )
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    Icons.Default.UnfoldMore,
-                    contentDescription = null,
-                    tint = TextGray.copy(alpha = 0.3f)
-                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Category Selection Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Choose Category",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextDark
-                )
-                Text(
-                    text = "See All",
-                    fontSize = 14.sp,
-                    color = SecondaryPink,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.clickable { /* Action */ }
-                )
-            }
-
+            Text(text = "Choose Category", modifier = Modifier.fillMaxWidth(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextDark)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Menggunakan Komponen Terpisah berdasarkan state
             if (isExpense) {
-                ExpenseCategorySection(
-                    selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it }
-                )
+                ExpenseCategorySection(selectedCategory = selectedCategory, onCategorySelected = { selectedCategory = it })
             } else {
-                IncomeCategorySection(
-                    selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it }
-                )
+                IncomeCategorySection(selectedCategory = selectedCategory, onCategorySelected = { selectedCategory = it })
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Date Selection
-            Text(
-                text = "Transaction Date",
-                fontSize = 14.sp,
-                color = TextGray,
-                modifier = Modifier.fillMaxWidth()
+            OutlinedTextField(
+                value = formattedDate,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Date") },
+                trailingIcon = { 
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth, 
+                        contentDescription = "Pick Date",
+                        modifier = Modifier.clickable { showDatePicker = true }
+                    ) 
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
             )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp)
-                    .clickable { showDatePicker = true },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = PrimaryPink, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(text = formattedDate, fontSize = 16.sp, color = TextDark)
-                Spacer(modifier = Modifier.weight(1f))
-                Icon(Icons.Default.CalendarToday, contentDescription = null, tint = TextGray, modifier = Modifier.size(18.dp))
-            }
-            HorizontalDivider(color = TextGray.copy(alpha = 0.1f))
-
+            
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Notes Section
-            Text(
-                text = "Notes (Optional)",
-                fontSize = 14.sp,
-                color = TextGray,
-                modifier = Modifier.fillMaxWidth()
+            
+            OutlinedTextField(
+                value = note,
+                onValueChange = { note = it },
+                label = { Text("Notes (Optional)") },
+                placeholder = { Text("Write details here...") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
             )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = null, tint = PrimaryPink, modifier = Modifier.size(20.dp))
-                TextField(
-                    value = note,
-                    onValueChange = { note = it },
-                    placeholder = { Text("Write details here...", fontSize = 16.sp, color = TextGray.copy(alpha = 0.4f)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                    ),
-                    singleLine = true,
-                    textStyle = LocalTextStyle.current.copy(fontSize = 16.sp, color = TextDark)
-                )
-            }
-            HorizontalDivider(color = TextGray.copy(alpha = 0.1f), modifier = Modifier.padding(top = 0.dp))
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Dynamic Info Card
             BudgetInfoCard(isExpense = isExpense)
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Save Button
-            Button(
-                onClick = { /* Save transaction */ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryPink),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(vertical = 16.dp)
-            ) {
-                Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Save Transaction", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 
-    // Date Picker Dialog
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
-                }
-            }
+            confirmButton = { TextButton(onClick = { showDatePicker = false }) { Text("OK") } }
         ) {
             DatePicker(state = datePickerState)
         }
@@ -305,12 +229,7 @@ fun TransactionTypeToggle(isExpense: Boolean, onToggle: (Boolean) -> Unit) {
                 .clickable { onToggle(true) },
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Expense",
-                color = if (isExpense) Color.White else TextGray,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
+            Text(text = "Expense", color = if (isExpense) Color.White else TextGray, fontWeight = FontWeight.Bold)
         }
         Box(
             modifier = Modifier
@@ -321,12 +240,7 @@ fun TransactionTypeToggle(isExpense: Boolean, onToggle: (Boolean) -> Unit) {
                 .clickable { onToggle(false) },
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Income",
-                color = if (!isExpense) Color.White else TextGray,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
+            Text(text = "Income", color = if (!isExpense) Color.White else TextGray, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -334,11 +248,7 @@ fun TransactionTypeToggle(isExpense: Boolean, onToggle: (Boolean) -> Unit) {
 data class CategoryItem(val name: String, val icon: ImageVector)
 
 @Composable
-fun CategoryGrid(
-    categories: List<CategoryItem>,
-    selectedCategory: String,
-    onCategorySelected: (String) -> Unit
-) {
+fun CategoryGrid(categories: List<CategoryItem>, selectedCategory: String, onCategorySelected: (String) -> Unit) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         modifier = Modifier.height(180.dp),
@@ -366,12 +276,7 @@ fun CategoryGrid(
                     )
                 }
                 Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = category.name,
-                    fontSize = 11.sp,
-                    color = TextGray,
-                    textAlign = TextAlign.Center
-                )
+                Text(text = category.name, fontSize = 11.sp, color = TextGray)
             }
         }
     }
@@ -387,46 +292,15 @@ fun BudgetInfoCard(isExpense: Boolean) {
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(20.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(Color.White),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    if (isExpense) Icons.Default.Star else Icons.AutoMirrored.Filled.TrendingUp, 
-                    contentDescription = null, 
-                    tint = contentColor, 
-                    modifier = Modifier.size(24.dp)
-                )
+        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(44.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
+                Icon(if (isExpense) Icons.Default.Star else Icons.AutoMirrored.Filled.TrendingUp, null, tint = contentColor)
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(
-                    text = if (isExpense) "Stay on budget today!" else "Income analysis",
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 15.sp,
-                    color = contentColor
-                )
-                Text(
-                    text = if (isExpense) "Your spending is 15% lower than usual." else "You've earned more than last month.",
-                    fontSize = 12.sp,
-                    color = contentColor.copy(alpha = 0.8f)
-                )
+                Text(text = if (isExpense) "Stay on budget today!" else "Income analysis", fontWeight = FontWeight.ExtraBold, color = contentColor)
+                Text(text = if (isExpense) "Your spending is lower than usual." else "You've earned more today.", fontSize = 12.sp, color = contentColor.copy(alpha = 0.8f))
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AddTransactionPreview() {
-    StudentfinancetrackerTheme {
-        AddTransactionScreen()
     }
 }
