@@ -21,8 +21,10 @@ class FinanceViewModel(private val dao: TransactionDao) : ViewModel() {
                 id = UUID.randomUUID().toString(),
                 description = desc,
                 amount = amount,
+                category = category,
                 isIncome = isIncome,
-                category = category
+                isExpense = !isIncome,
+                note = "" // Menambahkan nilai eksplisit untuk menghindari error 'No value passed'
             )
             dao.insertTransaction(newTransaction)
         }
