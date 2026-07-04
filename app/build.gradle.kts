@@ -1,17 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.example.student_finance_tracker"
-    compileSdk = 36 // Kembali menggunakan API 36 karena dibutuhkan oleh dependensi terbaru
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.student_finance_tracker"
         minSdk = 26
-        targetSdk = 36 // Kembali menggunakan API 36
+        targetSdk = 35 
         versionCode = 1
         versionName = "1.0"
 
@@ -27,9 +28,23 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    // Memastikan Kotlin Compiler menggunakan Target 11
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}
+
+// SOLUSI KRUSIAL: Memaksa semua task kompilasi (termasuk KSP) untuk menggunakan Target 11
+// Ini akan memperbaiki error mismatch antara Java (11) dan KSP (21)
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "11"
     }
 }
 
@@ -45,7 +60,6 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
 
-    // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)

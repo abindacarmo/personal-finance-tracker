@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -61,7 +60,7 @@ fun AddTransactionScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Add Transaction",
+                        text = "Add Transaction",
                         color = PrimaryPink,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
@@ -69,17 +68,20 @@ fun AddTransactionScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = PrimaryPink)
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = "Back", 
+                            tint = PrimaryPink
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight)
             )
         },
         bottomBar = {
-            // Pindahkan tombol simpan ke Bottom Bar agar selalu terlihat
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.Transparent,
+                color = Color.White,
                 tonalElevation = 8.dp
             ) {
                 Button(
@@ -97,14 +99,21 @@ fun AddTransactionScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp)
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryPink),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Icon(Icons.Default.Save, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Default.Save, 
+                        contentDescription = null
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Save Transaction", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Save Transaction", 
+                        fontSize = 16.sp, 
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         },
@@ -113,8 +122,8 @@ fun AddTransactionScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
+                .padding(paddingValues = innerPadding)
+                .verticalScroll(state = rememberScrollState())
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -127,26 +136,50 @@ fun AddTransactionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Text(text = "AMOUNT ($)", fontSize = 12.sp, color = TextGray, fontWeight = FontWeight.Bold)
+            Text(
+                text = "AMOUNT ($)", 
+                fontSize = 12.sp, 
+                color = TextGray, 
+                fontWeight = FontWeight.Bold
+            )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(vertical = 16.dp)
             ) {
-                Text(text = "$", fontSize = 48.sp, fontWeight = FontWeight.ExtraBold, color = PrimaryPink.copy(alpha = 0.5f))
+                Text(
+                    text = "$", 
+                    fontSize = 48.sp, 
+                    fontWeight = FontWeight.ExtraBold, 
+                    color = PrimaryPink.copy(alpha = 0.5f)
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 TextField(
                     value = amount,
-                    onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amount = it },
-                    placeholder = { Text("0", fontSize = 48.sp, fontWeight = FontWeight.ExtraBold, color = TextGray.copy(alpha = 0.2f)) },
+                    onValueChange = { input -> 
+                        if (input.all { it.isDigit() || it == '.' }) amount = input 
+                    },
+                    placeholder = { 
+                        Text(
+                            text = "0", 
+                            fontSize = 48.sp, 
+                            fontWeight = FontWeight.ExtraBold, 
+                            color = TextGray.copy(alpha = 0.2f)
+                        ) 
+                    },
                     modifier = Modifier.widthIn(min = 100.dp),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
                         unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                     ),
-                    textStyle = LocalTextStyle.current.copy(fontSize = 48.sp, fontWeight = FontWeight.ExtraBold, color = TextDark),
+                    textStyle = LocalTextStyle.current.copy(
+                        fontSize = 48.sp, 
+                        fontWeight = FontWeight.ExtraBold, 
+                        color = TextDark
+                    ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true
                 )
@@ -154,13 +187,25 @@ fun AddTransactionScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(text = "Choose Category", modifier = Modifier.fillMaxWidth(), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextDark)
+            Text(
+                text = "Choose Category", 
+                modifier = Modifier.fillMaxWidth(), 
+                fontSize = 18.sp, 
+                fontWeight = FontWeight.Bold, 
+                color = TextDark
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
             if (isExpense) {
-                ExpenseCategorySection(selectedCategory = selectedCategory, onCategorySelected = { selectedCategory = it })
+                ExpenseCategorySection(
+                    selectedCategory = selectedCategory, 
+                    onCategorySelected = { selectedCategory = it }
+                )
             } else {
-                IncomeCategorySection(selectedCategory = selectedCategory, onCategorySelected = { selectedCategory = it })
+                IncomeCategorySection(
+                    selectedCategory = selectedCategory, 
+                    onCategorySelected = { selectedCategory = it }
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -169,7 +214,7 @@ fun AddTransactionScreen(
                 value = formattedDate,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Date") },
+                label = { Text(text = "Date") },
                 trailingIcon = { 
                     Icon(
                         imageVector = Icons.Default.CalendarMonth, 
@@ -185,9 +230,9 @@ fun AddTransactionScreen(
             
             OutlinedTextField(
                 value = note,
-                onValueChange = { note = it },
-                label = { Text("Notes (Optional)") },
-                placeholder = { Text("Write details here...") },
+                onValueChange = { input -> note = input },
+                label = { Text(text = "Notes (Optional)") },
+                placeholder = { Text(text = "Write details here...") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -203,7 +248,11 @@ fun AddTransactionScreen(
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
-            confirmButton = { TextButton(onClick = { showDatePicker = false }) { Text("OK") } }
+            confirmButton = { 
+                TextButton(onClick = { showDatePicker = false }) { 
+                    Text(text = "OK") 
+                } 
+            }
         ) {
             DatePicker(state = datePickerState)
         }
@@ -229,7 +278,11 @@ fun TransactionTypeToggle(isExpense: Boolean, onToggle: (Boolean) -> Unit) {
                 .clickable { onToggle(true) },
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "Expense", color = if (isExpense) Color.White else TextGray, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Expense", 
+                color = if (isExpense) Color.White else TextGray, 
+                fontWeight = FontWeight.Bold
+            )
         }
         Box(
             modifier = Modifier
@@ -240,15 +293,21 @@ fun TransactionTypeToggle(isExpense: Boolean, onToggle: (Boolean) -> Unit) {
                 .clickable { onToggle(false) },
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "Income", color = if (!isExpense) Color.White else TextGray, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Income", 
+                color = if (!isExpense) Color.White else TextGray, 
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
 
-data class CategoryItem(val name: String, val icon: ImageVector)
-
 @Composable
-fun CategoryGrid(categories: List<CategoryItem>, selectedCategory: String, onCategorySelected: (String) -> Unit) {
+fun CategoryGrid(
+    categories: List<CategoryItem>, 
+    selectedCategory: String, 
+    onCategorySelected: (String) -> Unit
+) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         modifier = Modifier.height(180.dp),
@@ -256,7 +315,7 @@ fun CategoryGrid(categories: List<CategoryItem>, selectedCategory: String, onCat
         verticalArrangement = Arrangement.spacedBy(16.dp),
         userScrollEnabled = false
     ) {
-        items(categories) { category ->
+        items(items = categories) { category ->
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.clickable { onCategorySelected(category.name) }
@@ -269,14 +328,18 @@ fun CategoryGrid(categories: List<CategoryItem>, selectedCategory: String, onCat
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        category.icon,
+                        imageVector = category.icon,
                         contentDescription = category.name,
                         tint = if (selectedCategory == category.name) PrimaryPink else TextGray.copy(alpha = 0.6f),
                         modifier = Modifier.size(26.dp)
                     )
                 }
                 Spacer(modifier = Modifier.height(6.dp))
-                Text(text = category.name, fontSize = 11.sp, color = TextGray)
+                Text(
+                    text = category.name, 
+                    fontSize = 11.sp, 
+                    color = TextGray
+                )
             }
         }
     }
@@ -292,14 +355,32 @@ fun BudgetInfoCard(isExpense: Boolean) {
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(20.dp)
     ) {
-        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(44.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
-                Icon(if (isExpense) Icons.Default.Star else Icons.AutoMirrored.Filled.TrendingUp, null, tint = contentColor)
+        Row(
+            modifier = Modifier.padding(20.dp), 
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier.size(44.dp).clip(CircleShape).background(Color.White), 
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isExpense) Icons.Default.Star else Icons.AutoMirrored.Filled.TrendingUp, 
+                    contentDescription = null, 
+                    tint = contentColor
+                )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(text = if (isExpense) "Stay on budget today!" else "Income analysis", fontWeight = FontWeight.ExtraBold, color = contentColor)
-                Text(text = if (isExpense) "Your spending is lower than usual." else "You've earned more today.", fontSize = 12.sp, color = contentColor.copy(alpha = 0.8f))
+                Text(
+                    text = if (isExpense) "Stay on budget today!" else "Income analysis", 
+                    fontWeight = FontWeight.ExtraBold, 
+                    color = contentColor
+                )
+                Text(
+                    text = if (isExpense) "Your spending is lower than usual." else "You've earned more today.", 
+                    fontSize = 12.sp, 
+                    color = contentColor.copy(alpha = 0.8f)
+                )
             }
         }
     }
