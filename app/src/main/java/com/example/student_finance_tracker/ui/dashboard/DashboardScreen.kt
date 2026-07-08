@@ -33,19 +33,41 @@ fun DashboardScreen(
 ) {
     val transactions by transactionViewModel.allTransactions.collectAsState(initial = emptyList())
 
+    DashboardContent(
+        transactions = transactions,
+        onNavigateToAddTransaction = onNavigateToAddTransaction,
+        onSaveTransaction = { amount, category, note ->
+            transactionViewModel.saveTransaction(
+                amount = amount,
+                category = category,
+                date = System.currentTimeMillis(),
+                note = note,
+                isExpense = true,
+                onSuccess = {}
+            )
+        }
+    )
+}
+
+@Composable
+fun DashboardContent(
+    transactions: List<Transaction>,
+    onNavigateToAddTransaction: () -> Unit,
+    onSaveTransaction: (String, String, String) -> Unit
+) {
     Scaffold(
         bottomBar = { BottomNavigationBar() },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onNavigateToAddTransaction,
-                containerColor = PrimaryPink,
-                contentColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(24.dp))
             }
         },
-        containerColor = BackgroundLight
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -57,7 +79,7 @@ fun DashboardScreen(
             item { HeaderSection() }
             item { BalanceSection() }
             item { ExpenseSummarySection() }
-            item { AddTransactionSection(viewModel = transactionViewModel) }
+            item { AddTransactionSection(onSave = onSaveTransaction) }
             item { RecentEntriesSection(transactions = transactions) }
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
@@ -65,14 +87,16 @@ fun DashboardScreen(
 }
 
 @Composable
-fun AddTransactionSection(viewModel: TransactionViewModel) {
+fun AddTransactionSection(onSave: (String, String, String) -> Unit) {
     var amount by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("Food") }
     var note by remember { mutableStateOf("") }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.6f)),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
         shape = RoundedCornerShape(24.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -80,17 +104,21 @@ fun AddTransactionSection(viewModel: TransactionViewModel) {
                 text = "QUICK ADD EXPENSE",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryPink
+                color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(12.dp))
             
             Row(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "Amount", fontSize = 12.sp, color = TextGray)
+                    Text(
+                        text = "Amount", 
+                        fontSize = 12.sp, 
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     TextField(
                         value = amount,
                         onValueChange = { amount = it },
-                        placeholder = { Text("0", color = TextGray.copy(alpha = 0.5f)) },
+                        placeholder = { Text("0", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = TextFieldDefaults.colors(
@@ -103,7 +131,11 @@ fun AddTransactionSection(viewModel: TransactionViewModel) {
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "Category", fontSize = 12.sp, color = TextGray)
+                    Text(
+                        text = "Category", 
+                        fontSize = 12.sp, 
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     TextField(
                         value = category,
                         onValueChange = { category = it },
@@ -120,11 +152,15 @@ fun AddTransactionSection(viewModel: TransactionViewModel) {
             }
             
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = "Note", fontSize = 12.sp, color = TextGray)
+            Text(
+                text = "Note", 
+                fontSize = 12.sp, 
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             TextField(
                 value = note,
                 onValueChange = { note = it },
-                placeholder = { Text("What for?", color = TextGray.copy(alpha = 0.5f)) },
+                placeholder = { Text("What for?", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
@@ -140,24 +176,16 @@ fun AddTransactionSection(viewModel: TransactionViewModel) {
             Button(
                 onClick = { 
                     if (amount.isNotEmpty()) {
-                        viewModel.saveTransaction(
-                            amount = amount,
-                            category = category,
-                            date = System.currentTimeMillis(),
-                            note = note,
-                            isExpense = true,
-                            onSuccess = {
-                                amount = ""
-                                note = ""
-                            }
-                        )
+                        onSave(amount, category, note)
+                        amount = ""
+                        note = ""
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryPink),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(text = "Save Record", color = Color.White)
+                Text(text = "Save Record", color = MaterialTheme.colorScheme.onPrimary)
             }
         }
     }
@@ -171,14 +199,33 @@ fun HeaderSection() {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(SecondaryPink)) {
-                Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(24.dp), tint = Color.White)
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.secondary)
+            ) {
+                Icon(
+                    Icons.Default.Person, 
+                    contentDescription = null, 
+                    modifier = Modifier.align(Alignment.Center).size(24.dp), 
+                    tint = MaterialTheme.colorScheme.onSecondary
+                )
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = "Luminous Finance", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = PrimaryPink)
+            Text(
+                text = "Luminous Finance", 
+                fontSize = 20.sp, 
+                fontWeight = FontWeight.Bold, 
+                color = MaterialTheme.colorScheme.primary
+            )
         }
         IconButton(onClick = { }) {
-            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = PrimaryPink)
+            Icon(
+                Icons.Default.Settings, 
+                contentDescription = "Settings", 
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
@@ -186,8 +233,17 @@ fun HeaderSection() {
 @Composable
 fun BalanceSection() {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = "Available Balance", color = TextGray, fontSize = 14.sp)
-        Text(text = "$825.50", fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = TextDark)
+        Text(
+            text = "Available Balance", 
+            color = MaterialTheme.colorScheme.onSurfaceVariant, 
+            fontSize = 14.sp
+        )
+        Text(
+            text = "$825.50", 
+            fontSize = 32.sp, 
+            fontWeight = FontWeight.ExtraBold, 
+            color = MaterialTheme.colorScheme.onSurface
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             SummaryCard(title = "Income", amount = "+ $280", color = IncomeGreen, modifier = Modifier.weight(1f))
@@ -198,9 +254,15 @@ fun BalanceSection() {
 
 @Composable
 fun SummaryCard(title: String, amount: String, color: Color, modifier: Modifier = Modifier) {
-    Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.7f)), shape = RoundedCornerShape(16.dp)) {
+    Card(
+        modifier = modifier, 
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ), 
+        shape = RoundedCornerShape(16.dp)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = title, fontSize = 12.sp, color = TextGray)
+            Text(text = title, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(text = amount, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = color)
         }
     }
@@ -210,8 +272,17 @@ fun SummaryCard(title: String, amount: String, color: Color, modifier: Modifier 
 fun RecentEntriesSection(transactions: List<Transaction>) {
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Recent Entries", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextDark)
-            Text(text = "View All", color = ExpenseRed, fontSize = 12.sp)
+            Text(
+                text = "Recent Entries", 
+                fontSize = 18.sp, 
+                fontWeight = FontWeight.Bold, 
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "View All", 
+                color = MaterialTheme.colorScheme.primary, 
+                fontSize = 12.sp
+            )
         }
         Spacer(modifier = Modifier.height(12.dp))
         transactions.take(3).forEach { transaction ->
@@ -220,7 +291,7 @@ fun RecentEntriesSection(transactions: List<Transaction>) {
                 title = transaction.category,
                 subtitle = transaction.note,
                 amount = if (transaction.isExpense) "- $${transaction.amount}" else "+ $${transaction.amount}",
-                isIncome = !transaction.isExpense
+                isIncome = transaction.isIncome
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -229,32 +300,103 @@ fun RecentEntriesSection(transactions: List<Transaction>) {
 
 @Composable
 fun TransactionItem(icon: ImageVector, title: String, subtitle: String, amount: String, isIncome: Boolean) {
-    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.9f)), shape = RoundedCornerShape(16.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth(), 
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), 
+        shape = RoundedCornerShape(16.dp)
+    ) {
         Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(BackgroundLight)) {
-                Icon(icon, contentDescription = null, modifier = Modifier.align(Alignment.Center).size(20.dp), tint = TextGray)
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Icon(
+                    icon, 
+                    contentDescription = null, 
+                    modifier = Modifier.align(Alignment.Center).size(20.dp), 
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text(text = subtitle, fontSize = 12.sp, color = TextGray)
+                Text(
+                    text = title, 
+                    fontWeight = FontWeight.Bold, 
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle, 
+                    fontSize = 12.sp, 
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            Text(text = amount, color = if (isIncome) IncomeGreen else ExpenseRed, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(
+                text = amount, 
+                color = if (isIncome) IncomeGreen else ExpenseRed, 
+                fontWeight = FontWeight.Bold, 
+                fontSize = 14.sp
+            )
         }
     }
 }
 
 @Composable
 fun BottomNavigationBar() {
-    NavigationBar(containerColor = Color.White) {
-        NavigationBarItem(selected = true, onClick = { }, icon = { Icon(Icons.Default.Dashboard, contentDescription = null) }, label = { Text("Dashboard") }, colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryPink, selectedTextColor = PrimaryPink, indicatorColor = SecondaryPink.copy(alpha = 0.1f)))
-        NavigationBarItem(selected = false, onClick = { }, icon = { Icon(Icons.Default.History, contentDescription = null) }, label = { Text("History") })
-        NavigationBarItem(selected = false, onClick = { }, icon = { Icon(Icons.AutoMirrored.Filled.ShowChart, contentDescription = null) }, label = { Text("Trends") })
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+        NavigationBarItem(
+            selected = true, 
+            onClick = { }, 
+            icon = { Icon(Icons.Default.Dashboard, contentDescription = null) }, 
+            label = { Text("Dashboard") }, 
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary, 
+                selectedTextColor = MaterialTheme.colorScheme.primary, 
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        )
+        NavigationBarItem(
+            selected = false, 
+            onClick = { }, 
+            icon = { Icon(Icons.Default.History, contentDescription = null) }, 
+            label = { Text("History") }
+        )
+        NavigationBarItem(
+            selected = false, 
+            onClick = { }, 
+            icon = { Icon(Icons.AutoMirrored.Filled.ShowChart, contentDescription = null) }, 
+            label = { Text("Trends") }
+        )
     }
 }
 
 @Composable
 fun ExpenseSummarySection() {
-    Text(text = "Spending Summary", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextDark)
-    // Implementasi grafik bisa ditambahkan di sini
+    Column {
+        Text(
+            text = "Spending Summary", 
+            fontSize = 18.sp, 
+            fontWeight = FontWeight.Bold, 
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        // Implementasi grafik bisa ditambahkan di sini
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DashboardPreview() {
+    StudentfinancetrackerTheme {
+        DashboardContent(
+            transactions = listOf(
+                Transaction(amount = 50.0, category = "Food", note = "Lunch", isExpense = true),
+                Transaction(amount = 1200.0, category = "Salary", note = "Monthly", isIncome = true),
+                Transaction(amount = 25.0, category = "Transport", note = "Taxi", isExpense = true)
+            ),
+            onNavigateToAddTransaction = {},
+            onSaveTransaction = { _, _, _ -> }
+        )
+    }
 }
