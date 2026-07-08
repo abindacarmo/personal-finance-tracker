@@ -27,7 +27,6 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
         isExpense: Boolean,
         onSuccess: () -> Unit
     ) {
-        // Validasi sederhana: Jangan simpan jika angka kosong atau tidak valid
         val amountDouble = amount.toDoubleOrNull() ?: 0.0
         if (amountDouble <= 0.0) return
 
@@ -37,10 +36,11 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
                 category = category,
                 date = date,
                 note = note,
-                isExpense = isExpense
+                isExpense = isExpense,
+                isIncome = !isExpense // Set isIncome based on isExpense
             )
             repository.insert(newTransaction)
-            onSuccess() // Panggil callback setelah berhasil simpan
+            onSuccess()
         }
     }
 }
