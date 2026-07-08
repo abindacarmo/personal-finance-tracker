@@ -61,7 +61,7 @@ fun AddTransactionScreen(
                 title = {
                     Text(
                         text = "Add Transaction",
-                        color = PrimaryPink,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
                     )
@@ -71,17 +71,17 @@ fun AddTransactionScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack, 
                             contentDescription = "Back", 
-                            tint = PrimaryPink
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundLight)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
         bottomBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 8.dp
             ) {
                 Button(
@@ -101,7 +101,7 @@ fun AddTransactionScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp, vertical = 16.dp)
                         .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryPink),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
@@ -117,7 +117,7 @@ fun AddTransactionScreen(
                 }
             }
         },
-        containerColor = BackgroundLight
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -139,7 +139,7 @@ fun AddTransactionScreen(
             Text(
                 text = "AMOUNT ($)", 
                 fontSize = 12.sp, 
-                color = TextGray, 
+                color = MaterialTheme.colorScheme.onSurfaceVariant, 
                 fontWeight = FontWeight.Bold
             )
             Row(
@@ -151,7 +151,7 @@ fun AddTransactionScreen(
                     text = "$", 
                     fontSize = 48.sp, 
                     fontWeight = FontWeight.ExtraBold, 
-                    color = PrimaryPink.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 TextField(
@@ -164,7 +164,7 @@ fun AddTransactionScreen(
                             text = "0", 
                             fontSize = 48.sp, 
                             fontWeight = FontWeight.ExtraBold, 
-                            color = TextGray.copy(alpha = 0.2f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
                         ) 
                     },
                     modifier = Modifier.widthIn(min = 100.dp),
@@ -178,7 +178,7 @@ fun AddTransactionScreen(
                     textStyle = LocalTextStyle.current.copy(
                         fontSize = 48.sp, 
                         fontWeight = FontWeight.ExtraBold, 
-                        color = TextDark
+                        color = MaterialTheme.colorScheme.onSurface
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true
@@ -192,7 +192,7 @@ fun AddTransactionScreen(
                 modifier = Modifier.fillMaxWidth(), 
                 fontSize = 18.sp, 
                 fontWeight = FontWeight.Bold, 
-                color = TextDark
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -266,7 +266,7 @@ fun TransactionTypeToggle(isExpense: Boolean, onToggle: (Boolean) -> Unit) {
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(4.dp)
     ) {
         Box(
@@ -274,13 +274,13 @@ fun TransactionTypeToggle(isExpense: Boolean, onToggle: (Boolean) -> Unit) {
                 .weight(1f)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(10.dp))
-                .background(if (isExpense) SecondaryPink else Color.Transparent)
+                .background(if (isExpense) MaterialTheme.colorScheme.secondary else Color.Transparent)
                 .clickable { onToggle(true) },
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "Expense", 
-                color = if (isExpense) Color.White else TextGray, 
+                color = if (isExpense) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant, 
                 fontWeight = FontWeight.Bold
             )
         }
@@ -289,13 +289,13 @@ fun TransactionTypeToggle(isExpense: Boolean, onToggle: (Boolean) -> Unit) {
                 .weight(1f)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(10.dp))
-                .background(if (!isExpense) SecondaryPink else Color.Transparent)
+                .background(if (!isExpense) MaterialTheme.colorScheme.secondary else Color.Transparent)
                 .clickable { onToggle(false) },
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "Income", 
-                color = if (!isExpense) Color.White else TextGray, 
+                color = if (!isExpense) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant, 
                 fontWeight = FontWeight.Bold
             )
         }
@@ -324,13 +324,13 @@ fun CategoryGrid(
                     modifier = Modifier
                         .size(54.dp)
                         .clip(CircleShape)
-                        .background(if (selectedCategory == category.name) SecondaryPink.copy(alpha = 0.15f) else Color.White),
+                        .background(if (selectedCategory == category.name) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = category.icon,
                         contentDescription = category.name,
-                        tint = if (selectedCategory == category.name) PrimaryPink else TextGray.copy(alpha = 0.6f),
+                        tint = if (selectedCategory == category.name) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         modifier = Modifier.size(26.dp)
                     )
                 }
@@ -338,7 +338,7 @@ fun CategoryGrid(
                 Text(
                     text = category.name, 
                     fontSize = 11.sp, 
-                    color = TextGray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -347,8 +347,8 @@ fun CategoryGrid(
 
 @Composable
 fun BudgetInfoCard(isExpense: Boolean) {
-    val backgroundColor = if (isExpense) SecondaryPink.copy(alpha = 0.15f) else IncomeGreen.copy(alpha = 0.15f)
-    val contentColor = if (isExpense) PrimaryPink else IncomeGreen
+    val backgroundColor = if (isExpense) MaterialTheme.colorScheme.errorContainer else Color(0xFFE8F5E9) // Fallback for income green
+    val contentColor = if (isExpense) MaterialTheme.colorScheme.error else Color(0xFF2E7D32)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -360,7 +360,7 @@ fun BudgetInfoCard(isExpense: Boolean) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(44.dp).clip(CircleShape).background(Color.White), 
+                modifier = Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
