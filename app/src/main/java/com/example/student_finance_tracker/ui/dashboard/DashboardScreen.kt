@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.student_finance_tracker.data.Transaction
@@ -37,6 +36,7 @@ fun DashboardScreen(
     DashboardContent(
         transactions = transactions,
         onNavigateToAddTransaction = onNavigateToAddTransaction,
+        onSyncClick = { transactionViewModel.syncDataWithCloud() },
         onSaveTransaction = { amount, category, note, isExpense ->
             transactionViewModel.saveTransaction(
                 amount = amount,
@@ -44,7 +44,9 @@ fun DashboardScreen(
                 date = System.currentTimeMillis(),
                 note = note,
                 isExpense = isExpense,
-                onSuccess = {}
+                onSuccess = {
+                    // Berhasil simpan
+                }
             )
         }
     )
@@ -54,6 +56,7 @@ fun DashboardScreen(
 fun DashboardContent(
     transactions: List<Transaction>,
     onNavigateToAddTransaction: () -> Unit,
+    onSyncClick: () -> Unit,
     onSaveTransaction: (String, String, String, Boolean) -> Unit
 ) {
     Scaffold(
@@ -78,7 +81,7 @@ fun DashboardContent(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            item { HeaderSection() }
+            item { HeaderSection(onSyncClick = onSyncClick) }
             item { BalanceSection(transactions = transactions) }
             item { ExpenseSummarySection() }
             item { AddTransactionSection(onSave = onSaveTransaction) }
@@ -134,7 +137,7 @@ fun AddTransactionSection(onSave: (String, String, String, Boolean) -> Unit) {
                     TextField(
                         value = amount,
                         onValueChange = { amount = it },
-                        placeholder = { Text("0", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
+                        placeholder = { Text("0") },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = TextFieldDefaults.colors(
@@ -168,7 +171,7 @@ fun AddTransactionSection(onSave: (String, String, String, Boolean) -> Unit) {
             TextField(
                 value = note,
                 onValueChange = { note = it },
-                placeholder = { Text("What for?", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)) },
+                placeholder = { Text("What for?") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
@@ -183,8 +186,9 @@ fun AddTransactionSection(onSave: (String, String, String, Boolean) -> Unit) {
             
             Button(
                 onClick = { 
-                    if (amount.isNotEmpty()) {
+                    if (amount.isNotBlank()) {
                         onSave(amount, category, note, isExpense)
+                        // Kosongkan form setelah klik
                         amount = ""
                         note = ""
                     }
@@ -202,7 +206,7 @@ fun AddTransactionSection(onSave: (String, String, String, Boolean) -> Unit) {
 }
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(onSyncClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -222,8 +226,13 @@ fun HeaderSection() {
             Spacer(modifier = Modifier.width(12.dp))
             Text(text = "Luminous Finance", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         }
-        IconButton(onClick = { }) {
-            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.primary)
+        Row {
+            IconButton(onClick = onSyncClick) {
+                Icon(Icons.Default.CloudUpload, contentDescription = "Sync", tint = MaterialTheme.colorScheme.primary)
+            }
+            IconButton(onClick = { }) {
+                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.primary)
+            }
         }
     }
 }
@@ -325,20 +334,5 @@ fun BottomNavigationBar() {
 fun ExpenseSummarySection() {
     Column {
         Text(text = "Spending Summary", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DashboardPreview() {
-    StudentfinancetrackerTheme {
-        DashboardContent(
-            transactions = listOf(
-                Transaction(amount = 50.0, category = "Food", note = "Lunch", isExpense = true),
-                Transaction(amount = 1200.0, category = "Salary", note = "Monthly", isIncome = true)
-            ),
-            onNavigateToAddTransaction = {},
-            onSaveTransaction = { _, _, _, _ -> }
-        )
     }
 }
