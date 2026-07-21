@@ -20,6 +20,27 @@ class TransactionViewModel(application: Application) : AndroidViewModel(applicat
         allTransactions = repository.allTransactions
     }
 
+    /**
+     * Mengambil data dari Cloud (Firestore) ke Lokal (Room).
+     */
+    fun fetchDataFromCloud() {
+        viewModelScope.launch {
+            try {
+                val result = repository.fetchFromCloud()
+                result.onSuccess {
+                    Toast.makeText(getApplication(), "Data berhasil diambil dari Cloud!", Toast.LENGTH_SHORT).show()
+                }.onFailure { e ->
+                    Toast.makeText(getApplication(), "Gagal mengambil data: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(getApplication(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /**
+     * Mengunggah data Lokal (Room) ke Cloud (Firestore).
+     */
     fun syncDataWithCloud() {
         viewModelScope.launch {
             try {
