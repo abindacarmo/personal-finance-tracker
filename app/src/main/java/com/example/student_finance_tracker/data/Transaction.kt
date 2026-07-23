@@ -14,5 +14,5 @@ data class Transaction(
     val date: Long = System.currentTimeMillis(),
     val note: String = "",
     val isIncome: Boolean = false,
-    val isExpense: Boolean = false
+    val isExpense: Boolean = false,
 )
